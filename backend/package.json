@@ -2,11 +2,11 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "AI Content Platform Backend - Express/TypeScript API",
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
   "scripts": {
     "dev": "nodemon --exec ts-node src/index.ts",
     "build": "npx prisma@5.22.0 generate && tsc",
-    "start": "node dist/index.js",
+    "start": "node dist/src/index.js",
     "lint": "tsc --noEmit"
   },
   "keywords": [

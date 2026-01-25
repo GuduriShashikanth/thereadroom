@@ -5,7 +5,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const articles = await api.getAllArticles();
   const niches = await api.getNiches();
   
-  const baseUrl = 'http://localhost:3000'; // Should be env var in prod
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://thereadroom.vercel.app';
 
   const articleEntries = articles.map((article) => ({
     url: `${baseUrl}/${article.niche.slug}/${article.slug}`,

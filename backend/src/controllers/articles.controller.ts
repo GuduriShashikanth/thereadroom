@@ -170,7 +170,7 @@ export class ArticlesController {
       console.log(`📝 Article updated: ${updated.slug}`);
 
       // 3. Trigger Frontend Revalidation (Best Effort)
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const frontendUrl = process.env.FRONTEND_URL || 'https://thereadroom.vercel.app';
       const secret = process.env.ADMIN_SECRET;
       
       if (existing.status === 'PUBLISHED' || updated.status === 'PUBLISHED') {
