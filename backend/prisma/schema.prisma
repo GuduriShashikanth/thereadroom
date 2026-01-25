@@ -1,0 +1,158 @@
+// Prisma Schema for AI Content Platform
+// URL Contract: /{niche-slug}/{article-slug}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+  // URL is configured in prisma.config.ts (Prisma 7.x)
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+/// Article publication status
+enum ArticleStatus {
+  DRAFT      // Not yet published, may still be generating
+  PUBLISHED  // Live and visible on the frontend
+}
+
+/// Generation log status tracking
+enum GenerationStatus {
+  PENDING           // Queued for generation
+  IN_PROGRESS       // Currently being generated
+  COMPLETED         // Successfully generated
+  FAILED            // Generation failed (can retry)
+  PERMANENT_FAILURE // Failed after max retries
+}
+
+/// Keyword availability status
+enum KeywordStatus {
+  AVAILABLE  // Ready for automation pickup
+  RESERVED   // Reserved for manual editing
+  USED       // Already has a published article
+}
+
+/// Source of keyword for priority ordering
+/// Priority: MANUAL > SEED > AUTO > AUTO_REFILL
+enum KeywordSource {
+  MANUAL       // Admin-added via dashboard/API
+  SEED         // Added via seed script
+  AUTO         // Auto-generated on niche creation
+  AUTO_REFILL  // Auto-generated on keyword exhaustion
+}
+
+// ============================================
+// MODELS
+// ============================================
+
+/// Niche represents a content category/vertical
+/// URL: /{niche.slug}/...
+model Niche {
+  id          String   @id @default(cuid())
+  name        String   @unique  // Display name: "Personal Finance"
+  slug        String   @unique  // URL slug: "personal-finance"
+  description String?  // Optional description for SEO
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  keywords    Keyword[]
+  articles    Article[]
+  
+  @@map("niches")
+}
+
+/// Keyword represents a target search term for content generation
+model Keyword {
+  id           String        @id @default(cuid())
+  keyword      String        // Target keyword: "how to save money"
+  slug         String        // Article slug derived from keyword: "how-to-save-money"
+  intent       String        @default("informational") // informational, how-to, list
+  nicheId      String        @map("niche_id")
+  searchVolume Int?          @map("search_volume")  // Optional SEO metric
+  difficulty   Int?          // Optional SEO difficulty score (1-100)
+  
+  // Automation tracking
+  status       KeywordStatus @default(AVAILABLE)
+  source       KeywordSource @default(MANUAL)
+  used         Boolean       @default(false)
+  usedAt       DateTime?     @map("used_at")
+  
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  niche        Niche    @relation(fields: [nicheId], references: [id], onDelete: Cascade)
+  articles     Article[]
+  logs         GenerationLog[]
+  
+  // Unique constraint: same keyword can't exist twice in same niche
+  @@unique([nicheId, keyword])
+  @@unique([nicheId, slug])
+  @@map("keywords")
+}
+
+/// Article represents SEO-optimized content piece
+/// URL: /{niche.slug}/{article.slug}
+model Article {
+  id              String        @id @default(cuid())
+  slug            String        // URL slug: "how-to-save-money-fast"
+  title           String        // SEO title
+  metaDescription String        @map("meta_description") // SEO meta description
+  summary         String        // Short answer summary at top (GEO optimization)
+  content         String        // Full article content (HTML/Markdown)
+  // headings        String[]      // REMOVED: Schema mismatch with Supabase
+  faq             Json          // FAQ section as JSON array [{question, answer}]
+  
+  status          ArticleStatus @default(DRAFT)
+  
+  // Relations
+  nicheId         String        @map("niche_id")
+  niche           Niche         @relation(fields: [nicheId], references: [id], onDelete: Cascade)
+  keywordId       String?       @map("keyword_id")
+  keyword         Keyword?      @relation(fields: [keywordId], references: [id], onDelete: SetNull)
+  
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  publishedAt     DateTime?     @map("published_at")
+  
+  // Unique constraint: slug must be unique within a niche
+  // This enforces the URL contract: /{niche-slug}/{article-slug}
+  @@unique([nicheId, slug])
+  @@index([status])
+  @@index([nicheId, status])
+  @@map("articles")
+}
+
+/// GenerationLog tracks AI content generation attempts
+model GenerationLog {
+  id           String           @id @default(cuid())
+  keywordId    String           @map("keyword_id")
+  articleId    String?          @map("article_id")  // Set when generation succeeds
+  
+  status       GenerationStatus @default(PENDING)
+  errorMessage String?          @map("error_message")
+  retryCount   Int              @default(0) @map("retry_count")
+  
+  // Timing
+  startedAt    DateTime         @default(now()) @map("started_at")
+  completedAt  DateTime?        @map("completed_at")
+  
+  // Metadata
+  promptTokens Int?             @map("prompt_tokens")
+  outputTokens Int?             @map("output_tokens")
+  
+  // Relations
+  keyword      Keyword          @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+  
+  @@index([status])
+  @@index([keywordId])
+  @@map("generation_logs")
+}
