@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "nodemon --exec ts-node src/index.ts",
-    "build": "npm ci --include=dev && npx prisma@5.22.0 generate && tsc",
+    "build": "npx prisma@5.22.0 generate && tsc",
     "start": "node dist/index.js",
     "lint": "tsc --noEmit"
   },
@@ -19,23 +19,23 @@
   "license": "ISC",
   "dependencies": {
     "@prisma/client": "^5.22.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
     "@types/multer": "^2.0.0",
+    "@types/node": "^25.0.9",
+    "@types/node-cron": "^3.0.11",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "front-matter": "^4.0.2",
     "multer": "^2.0.2",
     "node-cron": "^4.2.1",
-    "openai": "^6.16.0"
+    "openai": "^6.16.0",
+    "prisma": "^5.22.0",
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.6",
-    "@types/node": "^25.0.9",
-    "@types/node-cron": "^3.0.11",
     "nodemon": "^3.1.11",
-    "prisma": "^5.22.0",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "ts-node": "^10.9.2"
   }
 }
