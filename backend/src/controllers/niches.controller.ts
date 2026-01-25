@@ -8,6 +8,9 @@ export class NicheController {
    */
   async list(req: Request, res: Response) {
     try {
+      console.log('[NicheController] Fetching niches...');
+      console.log('[NicheController] DATABASE_URL set:', !!process.env.DATABASE_URL);
+      
       const niches = await prisma.niche.findMany({
         orderBy: {
           name: 'asc',
@@ -19,10 +22,16 @@ export class NicheController {
         },
       });
 
+      console.log(`[NicheController] Found ${niches.length} niches`);
       res.json({ niches });
     } catch (error: any) {
-      console.error('Error listing niches:', error);
-      res.status(500).json({ error: 'Failed to list niches', details: error?.message || String(error) });
+      console.error('[NicheController] Error listing niches:', error?.code, error?.message);
+      console.error('[NicheController] Full error:', JSON.stringify(error, null, 2));
+      res.status(500).json({ 
+        error: 'Failed to list niches', 
+        code: error?.code,
+        details: error?.message || String(error) 
+      });
     }
   }
 

@@ -12,11 +12,31 @@ declare global {
  * In development, we store it in globalThis to prevent multiple instances
  * during hot reloading with nodemon
  */
-// Fix for Supabase connection stability
-const dbUrl = process.env.DATABASE_URL;
-const connectionUrl = dbUrl && !dbUrl.includes('?') 
-  ? `${dbUrl}?sslmode=require` 
-  : dbUrl;
+// Build connection URL with required SSL and connection settings for Supabase
+function buildConnectionUrl(): string {
+  const dbUrl = process.env.DATABASE_URL || '';
+  
+  // Log for debugging
+  console.log('[Prisma] Configuring database connection...');
+  console.log('[Prisma] DB Host:', dbUrl.includes('@') ? dbUrl.split('@')[1]?.split('/')[0] : 'not set');
+  
+  // If URL already has query params, append; otherwise add
+  if (dbUrl.includes('?')) {
+    // Check if sslmode is already set
+    if (!dbUrl.includes('sslmode=')) {
+      return `${dbUrl}&sslmode=require&connect_timeout=30`;
+    }
+    if (!dbUrl.includes('connect_timeout=')) {
+      return `${dbUrl}&connect_timeout=30`;
+    }
+    return dbUrl;
+  }
+  
+  // Add required params for Supabase
+  return `${dbUrl}?sslmode=require&connect_timeout=30`;
+}
+
+const connectionUrl = buildConnectionUrl();
 
 export const prisma = globalThis.prisma ?? new PrismaClient({
   log: process.env.NODE_ENV === 'development' 
