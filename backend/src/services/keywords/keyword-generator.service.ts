@@ -87,7 +87,7 @@ class KeywordGeneratorService {
         where: { nicheId },
         select: { keyword: true },
       });
-      const existingSet = new Set(existingKeywords.map(k => k.keyword.toLowerCase()));
+      const existingSet = new Set(existingKeywords.map((k: { keyword: string }) => k.keyword.toLowerCase()));
 
       // Generate keyword ideas via AI
       const ideas = await this.generateKeywordIdeas(
@@ -129,7 +129,7 @@ class KeywordGeneratorService {
         where: { nicheId },
         select: { keyword: true },
       });
-      const existingSet = new Set(existingKeywords.map(k => k.keyword.toLowerCase()));
+      const existingSet = new Set(existingKeywords.map((k: { keyword: string }) => k.keyword.toLowerCase()));
 
       // Get niche description for context
       const niche = await prisma.niche.findUnique({

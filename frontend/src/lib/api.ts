@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3001/api';
+const API_URL = 'https://thereadroom.onrender.com/api';
 
 // Cache revalidation time (ISR) - Disable for dev
 export const REVALIDATE_TIME = 0;

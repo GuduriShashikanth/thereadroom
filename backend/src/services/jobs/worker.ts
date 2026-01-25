@@ -246,7 +246,7 @@ async function processKeyword(keyword: any, logId: string, retryCount: number) {
     const payload = await contentGenerator.generateArticle(niche.name, keyword.keyword);
 
     // Atomic transaction: Create article + Mark keyword as USED + Update log
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Create Article
       const article = await tx.article.create({
         data: {
