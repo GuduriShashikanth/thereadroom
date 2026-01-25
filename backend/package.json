@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "nodemon --exec ts-node src/index.ts",
-    "build": "npx prisma generate && tsc",
+    "build": "npm ci && npx prisma@5.22.0 generate && tsc",
     "start": "node dist/index.js",
     "lint": "tsc --noEmit"
   },
