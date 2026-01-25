@@ -44,7 +44,7 @@ SEO REQUIREMENTS:
 - Ensure content fully satisfies the search intent.
 
 CONTENT REQUIREMENTS:
-- Length: 1000–1500 words.
+- Length: 2000–2500 words.
 - Content must be original, specific, and useful.
 - Avoid vague statements or filler text.
 - If exact data is unknown, give realistic India-relevant approximations
