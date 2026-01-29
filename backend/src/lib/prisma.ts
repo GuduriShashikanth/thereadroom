@@ -42,9 +42,9 @@ function buildConnectionUrl(): string {
     if (!dbUrl.includes('pgbouncer=')) {
       params.push('pgbouncer=true');
     }
-    // Limit connections for serverless
+    // Limit connections for serverless (but allow enough for worker + API)
     if (!dbUrl.includes('connection_limit=')) {
-      params.push('connection_limit=1');
+      params.push('connection_limit=5');
     }
   }
   
