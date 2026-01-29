@@ -21,9 +21,13 @@ function buildConnectionUrl(): string {
     return '';
   }
   
-  // Extract host info for logging (hide password)
-  const hostMatch = dbUrl.match(/@([^/]+)/);
-  console.log('[Prisma] DB Host:', hostMatch ? hostMatch[1] : 'unknown');
+  // Log full URL structure (hiding password)
+  const urlParts = dbUrl.match(/^postgresql:\/\/([^:]+):([^@]+)@([^/]+)\/(.+)$/);
+  if (urlParts) {
+    console.log('[Prisma] User:', urlParts[1]);
+    console.log('[Prisma] Host:', urlParts[3]);
+    console.log('[Prisma] Database:', urlParts[4].split('?')[0]);
+  }
   
   // Detect if using pooler (port 6543) or direct (port 5432)
   const isPooler = dbUrl.includes(':6543') || dbUrl.includes('pooler.supabase.com');
@@ -48,9 +52,14 @@ function buildConnectionUrl(): string {
     }
   }
   
-  // Connection timeout
+  // Connection timeout (increased for Render cold starts)
   if (!dbUrl.includes('connect_timeout=')) {
-    params.push('connect_timeout=15');
+    params.push('connect_timeout=30');
+  }
+  
+  // Pool timeout - how long to wait for a connection from pool
+  if (!dbUrl.includes('pool_timeout=')) {
+    params.push('pool_timeout=30');
   }
   
   // Build final URL
