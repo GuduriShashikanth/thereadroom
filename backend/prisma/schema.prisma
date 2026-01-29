@@ -8,7 +8,7 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  // directUrl = env("DIRECT_URL")  // Commented out - causes issues on Render where direct DB connections are blocked
   // URL is configured in prisma.config.ts (Prisma 7.x)
 }
 

@@ -8,40 +8,66 @@ declare global {
 }
 
 /**
- * Prisma client instance
- * In development, we store it in globalThis to prevent multiple instances
- * during hot reloading with nodemon
+ * Build connection URL with proper settings for Supabase
+ * Handles both pooler (6543) and direct (5432) connections
  */
-// Build connection URL with required SSL and connection settings for Supabase
 function buildConnectionUrl(): string {
   const dbUrl = process.env.DATABASE_URL || '';
   
-  // Log for debugging
   console.log('[Prisma] Configuring database connection...');
-  console.log('[Prisma] DB Host:', dbUrl.includes('@') ? dbUrl.split('@')[1]?.split('/')[0] : 'not set');
   
-  // If URL already has query params, append; otherwise add
-  if (dbUrl.includes('?')) {
-    // Check if sslmode is already set
-    if (!dbUrl.includes('sslmode=')) {
-      return `${dbUrl}&sslmode=require&connect_timeout=30`;
+  if (!dbUrl) {
+    console.error('[Prisma] DATABASE_URL is not set!');
+    return '';
+  }
+  
+  // Extract host info for logging (hide password)
+  const hostMatch = dbUrl.match(/@([^/]+)/);
+  console.log('[Prisma] DB Host:', hostMatch ? hostMatch[1] : 'unknown');
+  
+  // Detect if using pooler (port 6543) or direct (port 5432)
+  const isPooler = dbUrl.includes(':6543') || dbUrl.includes('pooler.supabase.com');
+  console.log('[Prisma] Connection mode:', isPooler ? 'Pooler (PgBouncer)' : 'Direct');
+  
+  // Build params based on connection type
+  const params: string[] = [];
+  
+  // SSL is required for both
+  if (!dbUrl.includes('sslmode=')) {
+    params.push('sslmode=require');
+  }
+  
+  // For pooler connections, add pgbouncer settings
+  if (isPooler) {
+    if (!dbUrl.includes('pgbouncer=')) {
+      params.push('pgbouncer=true');
     }
-    if (!dbUrl.includes('connect_timeout=')) {
-      return `${dbUrl}&connect_timeout=30`;
+    // Limit connections for serverless
+    if (!dbUrl.includes('connection_limit=')) {
+      params.push('connection_limit=1');
     }
+  }
+  
+  // Connection timeout
+  if (!dbUrl.includes('connect_timeout=')) {
+    params.push('connect_timeout=15');
+  }
+  
+  // Build final URL
+  if (params.length === 0) {
     return dbUrl;
   }
   
-  // Add required params for Supabase
-  return `${dbUrl}?sslmode=require&connect_timeout=30`;
+  const separator = dbUrl.includes('?') ? '&' : '?';
+  return `${dbUrl}${separator}${params.join('&')}`;
 }
 
 const connectionUrl = buildConnectionUrl();
+console.log('[Prisma] Connection URL configured (params only):', 
+  connectionUrl.includes('?') ? connectionUrl.split('?')[1] : 'no params');
 
 export const prisma = globalThis.prisma ?? new PrismaClient({
-  log: process.env.NODE_ENV === 'development' 
-    ? ['query', 'error', 'warn'] 
-    : ['error'],
+  log: ['error', 'warn'],
   datasources: {
     db: {
       url: connectionUrl,
