@@ -12,15 +12,9 @@ interface Props {
   }>;
 }
 
-// 1. Generate Static Params for SSG
-export async function generateStaticParams() {
-  const articles = await api.getAllArticles();
-  
-  return articles.map((article) => ({
-    niche: article.niche.slug,
-    slug: article.slug,
-  }));
-}
+// Allow dynamic rendering (prevents static-to-dynamic crash)
+export const dynamic = 'force-dynamic';
+
 
 // 2. Dynamic SEO Metadata
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

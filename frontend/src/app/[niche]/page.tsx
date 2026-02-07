@@ -9,13 +9,9 @@ interface Props {
   }>;
 }
 
-// 1. Generate Static Params (SSG)
-export async function generateStaticParams() {
-  const niches = await api.getNiches();
-  return niches.map((niche) => ({
-    niche: niche.slug,
-  }));
-}
+// Allow dynamic rendering for unknown slugs (prevents static-to-dynamic crash)
+export const dynamic = 'force-dynamic';
+
 
 // 2. Metadata
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
